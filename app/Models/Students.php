@@ -9,8 +9,8 @@ class Students extends Model
         protected $table = "students";
     protected $primaryKey = "id_stu";
     protected $fillable = ["nom","prenom","numero","genre","date_naissance","niveau_sco","status",
-                            "gmail","filiere","cin",];
+                            "gmail","filiere","cin","adresse"];
         public function Resultat(){
-        return $this->hasMany(Resultat::class, "id_stu", "id_stu");
+        return $this->hasOne(Resultat::class, "id_stu", "id_stu");
     }
 }

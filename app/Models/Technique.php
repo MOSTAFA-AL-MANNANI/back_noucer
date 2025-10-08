@@ -8,5 +8,5 @@ class Technique extends Model
 {
     protected $table = "technique";
     protected $primaryKey = "id";
-    protected $fillable = ["question"];
+    protected $fillable = ["question","filiere"];
 }

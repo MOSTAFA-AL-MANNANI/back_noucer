@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('genre');
             $table->string('gmail');
             $table->string('numero');
+            $table->string('adresse');
             $table->string('niveau_sco');
             $table->string('filiere');
             $table->date('date_naissance');
