@@ -20,7 +20,7 @@ class Section extends Model
 
     public function students()
     {
-        return $this->belongsToMany(Students::class, 'section_student')
+        return $this->belongsToMany(Students::class, 'section_student', 'section_id', 'student_id')
                     ->withPivot('enrolled_at', 'status')
                     ->withTimestamps();
     }

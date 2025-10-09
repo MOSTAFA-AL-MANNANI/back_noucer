@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Entretien;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GestionScolaireController;
+use App\Http\Controllers\Student;
 
 
 
@@ -73,7 +74,20 @@ Route::post('/documents', [GestionScolaireController::class, 'ajouterDocuments']
 Route::get('/documents/missing/{student_id}', [GestionScolaireController::class, 'checkMissingDocuments']);
 
 // ✅ جلب الطلاب في حالة انتظار مع النقاط
-Route::get('/students/waiting', [Entretien::class, 'getWaitingStudents']);
+Route::get('/students/waiting/en', [Entretien::class, 'getWaitingStudentsByFiliere']);
+Route::get('/students/filiere/en', [Entretien::class, 'getFilieres']); // للحصول على قائمة الفِرَق
+Route::put('/students/status/en/{id}', [Entretien::class, 'updateStatus']);
+
+Route::get('/student/{filiere}', [Student::class, 'getStudents']);
+Route::get('/student/{id}/documents', [Student::class, 'getDocuments']);
+Route::post('/student/{id}/documents/update', [Student::class, 'updateDocument']);
+
+Route::post('/students/{filiere}/pass-top', [Student::class, 'passTopStudents']);
+Route::get('/sections/{id}/students', [Student::class, 'getStudentsBySection']);
+
+
+// جلب الغيابات لكل طالب
+Route::get('/students/{id}/absences', [Student::class, 'getAbsencesByStudent']);
 });
 Route::get('/top-students/{filiere}', [Entretien::class, 'topStudentsByFiliere']);
 

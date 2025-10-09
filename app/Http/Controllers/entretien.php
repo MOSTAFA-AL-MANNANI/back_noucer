@@ -80,9 +80,15 @@ class Entretien extends Controller
 
     public function modifierStu(Request $request, $id)
     {
-        $stu = Students::findOrFail($id);
-        $stu->update($request->all());
-        return response()->json(["message" => "L'étudiant est bien modifié", "data" => $stu], 200);
+        $student = \App\Models\Students::where('id_stu', $id)->first();
+
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        $student->update($request->only('status'));
+
+        return response()->json(['message' => 'Student updated successfully', 'student' => $student]);
     }
 
     public function supprimerStu($id)
@@ -126,26 +132,26 @@ public function ajouterResu(Request $request)
 
 
     // ✅ جلب التلاميذ في حالة انتظار مع ترتيبهم حسب النقاط
-    public function getWaitingStudents()
-    {
-        $waiting = Students::with('Resultat')
-            ->where('status', 'attende')
-            ->orderByDesc(
-                Resultat::select('total')
-                    ->whereColumn('resultat.id_stu', 'students.id_stu')
-                    ->limit(1)
-            )
-            ->get();
+    // public function getWaitingStudents()
+    // {
+    //     $waiting = Students::with('Resultat')
+    //         ->where('status', 'attende')
+    //         ->orderByDesc(
+    //             Resultat::select('total')
+    //                 ->whereColumn('resultat.id_stu', 'students.id_stu')
+    //                 ->limit(1)
+    //         )
+    //         ->get();
 
-        return response()->json($waiting, 200);
-    }
-    // ✅ جلب أعلى 12 طالب مع معلوماتهم ونتائجهم
+    //     return response()->json($waiting, 200);
+    // }
+
 
 
 // ✅ جلب تفاصيل طالب واحد مع نتيجتو
 public function getStudentDetail($id)
 {
-    $student = Students::with('Resultat')
+    $student = Students::with('resultat')
         ->where('id_stu', $id)
         ->firstOrFail();
 
@@ -174,8 +180,9 @@ public function getStudentDetail($id)
 
         return response()->json($student);
     }
-    public function topStudentsByFiliere($filiere)
+public function topStudentsByFiliere($filiere)
 {
+    // Récupérer les 30 meilleurs étudiants de la filière
     $students = \App\Models\Students::with('resultat')
         ->where('filiere', $filiere)
         ->where('status', 'in_interview')
@@ -185,6 +192,80 @@ public function getStudentDetail($id)
         ->take(30)
         ->get();
 
+    // Extraire les ID des meilleurs étudiants
+    $topStudentIds = $students->pluck('id_stu')->toArray();
+
+    // Mettre à jour le statut des autres étudiants de la même filière
+    \App\Models\Students::where('filiere', $filiere)
+        ->whereNotIn('id_stu', $topStudentIds)
+        ->update(['status' => 'attende']);
+
+    // Retourner la liste des 30 meilleurs
     return response()->json($students);
 }
+// جلب الطلاب في الانتظار حسب الفِرقة
+public function getWaitingStudentsByFiliere()
+{
+    // 🟩 récupérer toutes les filières des étudiants en attente
+    $filieres = Students::where('status', 'attende')
+        ->distinct()
+        ->pluck('filiere');
+
+    $result = [];
+
+    foreach ($filieres as $filiere) {
+        // 🟦 récupérer les étudiants + leurs notes (via jointure)
+        $students = Students::with('resultat')
+            ->where('status', 'attende')
+            ->where('filiere', $filiere)
+            ->leftJoin('resultat', 'students.id_stu', '=', 'resultat.id_stu')
+            ->orderByDesc('resultat.total')
+            ->select(
+                'students.id_stu',
+                'students.nom',
+                'students.prenom',
+                'students.numero',
+                'students.genre',
+                'students.date_naissance',
+                'students.niveau_sco',
+                'students.status',
+                'students.gmail',
+                'students.filiere',
+                'students.cin',
+                'students.adresse',
+                'resultat.scoreP',
+                'resultat.scoreT',
+                'resultat.scoreS',
+                'resultat.total'
+            )
+            ->get();
+
+        $result[$filiere] = $students;
+    }
+
+    return response()->json($result, 200);
 }
+
+
+// تحديث حالة الطالب
+public function updateStatus(Request $request, $id)
+{
+    $student = Students::findOrFail($id);
+    $student->status = $request->status;
+    $student->save();
+
+    return response()->json([
+        'message' => 'Status mis à jour avec succès',
+        'student' => $student
+    ], 200);
+}
+
+// جلب قائمة الفِرَق
+public function getFilieres()
+{
+    $filieres = Students::distinct()->pluck('filiere');
+    return response()->json($filieres, 200);
+}
+}
+
+
