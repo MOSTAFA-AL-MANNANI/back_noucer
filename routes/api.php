@@ -6,10 +6,14 @@ use App\Http\Controllers\Entretien;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GestionScolaireController;
 use App\Http\Controllers\Student;
+use App\Http\Controllers\StudentImportController;
+
+
 
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/students/import', [StudentImportController::class, 'import']);
 // ================= Personel =================
 Route::get('/personels', [Entretien::class, 'getPersonels']);
 Route::post('/personels', [Entretien::class, 'ajouterPer']);
