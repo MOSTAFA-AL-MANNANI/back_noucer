@@ -86,7 +86,10 @@ class Entretien extends Controller
             return response()->json(['message' => 'Student not found'], 404);
         }
 
-        $student->update($request->only('status'));
+       $student->update($request->only([
+            'nom', 'prenom', 'numero', 'genre', 'date_naissance',
+            'niveau_sco', 'status', 'gmail', 'filiere', 'cin', 'adresse'
+        ]));
 
         return response()->json(['message' => 'Student updated successfully', 'student' => $student]);
     }
