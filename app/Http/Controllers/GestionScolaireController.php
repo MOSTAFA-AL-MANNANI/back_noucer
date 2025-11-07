@@ -179,16 +179,35 @@ class GestionScolaireController extends Controller
 
     // ✅ 5. عرض التلاميذ المسجلين في قسم معين
    // جلب التلاميذ الموجودين في قسم معين
-    public function getStudentsInSection($section_id)
-    {
-        $students = DB::table('students')
-            ->join('section_student', 'section_student.student_id', '=', 'students.id_stu')
-            ->where('section_student.section_id', $section_id)
-            ->select('students.*')
-            ->get();
 
-        return response()->json($students);
-    }
+    public function getStudentsInSection($section_id)
+{
+    $students = DB::table('section_student')
+        ->join('students', 'section_student.student_id', '=', 'students.id_stu')
+        ->join('sections', 'section_student.section_id', '=', 'sections.id') // اختياري إذا أردت معلومات عن القسم
+        ->where('section_student.section_id', $section_id)
+        ->select(
+            'students.id_stu',
+            'students.nom',
+            'students.prenom',
+            'students.cin',
+            'students.numero',
+            'students.gmail',
+            'students.genre',
+            'students.niveau_sco',
+            'students.date_naissance',
+            'students.adresse',
+            'students.filiere',
+            'students.status',
+            'section_student.id as section_student_id',
+            'section_student.created_at as date_affectation',
+            'sections.name' // فقط إذا يوجد جدول sections
+        )
+        ->get();
+
+    return response()->json($students);
+}
+
 
 
     public function markAttendance(Request $request)
@@ -394,4 +413,28 @@ class GestionScolaireController extends Controller
         ];
         return response()->json($report);
     }
+
+public function supprimersecstu($id)
+{
+    // تحقق أولاً إذا كان السجل موجوداً
+    $sectionStudent = SectionStudent::find($id);
+
+    if (!$sectionStudent) {
+        return response()->json([
+            'message' => "Aucun enregistrement trouvé avec l'id=$id."
+        ], 404);
+    }
+
+    try {
+        $sectionStudent->delete();
+
+        return response()->json([
+            'message' => "L'enregistrement avec id=$id a été supprimé avec succès."
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => "Erreur lors de la suppression : " . $e->getMessage()
+        ], 500);
+    }
+}
 }

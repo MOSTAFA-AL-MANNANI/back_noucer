@@ -20,7 +20,7 @@ class StudentImportController extends Controller
         $file = $request->file('file');
         $extension = $file->getClientOriginalExtension();
 
-        // التحقق من امتداد ZipArchive إذا كان الملف xlsx أو xls
+        // تحقق من ZipArchive إذا الملف Excel
         if (in_array($extension, ['xlsx', 'xls']) && !class_exists('ZipArchive')) {
             return response()->json([
                 'message' => "Erreur : L'importation des fichiers $extension nécessite l'extension PHP ZipArchive activée."
@@ -38,37 +38,66 @@ class StudentImportController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray();
 
-        $headers = array_map(function($h) {
-            return strtolower(trim($h));
-        }, $rows[0]);
+        if (count($rows) < 2) {
+            return response()->json(['message' => 'Fichier Excel vide ou sans données.'], 400);
+        }
 
+        $headers = array_map(fn($h) => strtolower(trim($h)), $rows[0]);
         unset($rows[0]);
 
-        foreach ($rows as $row) {
+        // تحقق أن العمود niveau_sco موجود في الملف
+        if (!in_array('niveau_sco', $headers) && !in_array('niveau', $headers) && !in_array('niveau scolaire', $headers)) {
+            return response()->json([
+                'message' => "Le fichier Excel doit contenir une colonne 'niveau_sco' (ou 'Niveau' / 'Niveau Scolaire')."
+            ], 400);
+        }
+
+        $inserted = 0;
+        $skipped = [];
+
+        foreach ($rows as $index => $row) {
             $data = [];
 
-            foreach ($headers as $index => $header) {
-                $value = $row[$index] ?? null;
+            foreach ($headers as $i => $header) {
+                $value = $row[$i] ?? null;
 
-                if (in_array($header, ['nom', 'name'])) $data['nom'] = $value;
-                elseif (in_array($header, ['prenom', 'prénom'])) $data['prenom'] = $value;
+                if (in_array($header, ['nom','name'])) $data['nom'] = $value;
+                elseif (in_array($header, ['prenom','prénom'])) $data['prenom'] = $value;
                 elseif ($header === 'cin') $data['cin'] = $value;
-                elseif (in_array($header, ['genre', 'sex'])) $data['genre'] = $value;
-                elseif (in_array($header, ['gmail', 'email'])) $data['gmail'] = $value;
-                elseif (in_array($header, ['numero', 'phone', 'téléphone'])) $data['numero'] = $value;
-                elseif (in_array($header, ['adresse', 'address'])) $data['adresse'] = $value;
-                elseif (in_array($header, ['niveau_sco', 'niveau'])) $data['niveau_sco'] = $value;
-                elseif (in_array($header, ['date_naissance', 'date naissance', 'birthdate']) && !empty($value)) {
-                    $data['date_naissance'] = Carbon::parse($value)->format('Y-m-d');
+                elseif (in_array($header, ['genre','sex'])) $data['genre'] = $value;
+                elseif (in_array($header, ['gmail','email'])) $data['gmail'] = $value;
+                elseif (in_array($header, ['numero','phone','téléphone'])) $data['numero'] = $value;
+                elseif (in_array($header, ['adresse','address'])) $data['adresse'] = $value;
+                elseif (in_array($header, ['niveau_sco','niveau','niveau scolaire'])) $data['niveau_sco'] = $value;
+                elseif (in_array($header, ['date_naissance','date naissance','birthdate']) && !empty($value)) {
+                    try {
+                        $data['date_naissance'] = Carbon::parse($value)->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $data['date_naissance'] = null;
+                    }
                 }
+            }
+
+            // تحقق أن niveau_sco موجود وله قيمة
+            if (empty($data['niveau_sco'])) {
+                $skipped[] = $index + 2; // رقم الصف في Excel (الصف 1 رؤوس)
+                continue;
             }
 
             $data['filiere'] = $filiere;
             $data['status'] = 'registred';
 
             Students::create($data);
+            $inserted++;
         }
 
-        return response()->json(['message' => 'Import terminé']);
+        if (!empty($skipped)) {
+            return response()->json([
+                'message' => "Import terminé partiellement: $inserted lignes insérées, certaines lignes ignorées car 'niveau_sco' est vide.",
+                'lignes_ignorées' => $skipped
+            ]);
+        }
+
+        return response()->json(['message' => "Import terminé avec succès ($inserted lignes ajoutées)."]);
     }
 }

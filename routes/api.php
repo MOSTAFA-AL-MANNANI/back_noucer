@@ -7,7 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GestionScolaireController;
 use App\Http\Controllers\Student;
 use App\Http\Controllers\StudentImportController;
-
+use App\Http\Controllers\AttendanceController;
 
 
 
@@ -70,12 +70,18 @@ Route::post('/enroll-students', [GestionScolaireController::class, 'enrollSelect
 Route::get('/top-students', [GestionScolaireController::class, 'getTopStudentsByFiliere']);
 Route::post('/enroll-students', [GestionScolaireController::class, 'enrollStudents']);
 Route::get('/section/{id}/students', [GestionScolaireController::class, 'getStudentsInSection']);
+Route::delete('delete/section/student/{id}', [GestionScolaireController::class, 'supprimersecstu']);
 
 Route::post('/mark-attendance', [GestionScolaireController::class, 'markAttendance']);
 Route::get('/attendance/section/{sectionId}/date/{date}', [GestionScolaireController::class, 'getSectionAttendance']);
 
 Route::post('/documents', [GestionScolaireController::class, 'ajouterDocuments']);
 Route::get('/documents/missing/{student_id}', [GestionScolaireController::class, 'checkMissingDocuments']);
+
+
+Route::get('/section/{section}/students', [AttendanceController::class, 'studentsBySection']);
+Route::get('/section/{section}/attendance', [AttendanceController::class, 'attendanceBySection']);
+Route::post('/section/{section}/attendance', [AttendanceController::class, 'saveAttendance']);
 
 // ✅ جلب الطلاب في حالة انتظار مع النقاط
 Route::get('/students/waiting/en', [Entretien::class, 'getWaitingStudentsByFiliere']);
