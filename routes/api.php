@@ -56,7 +56,8 @@ Route::controller(GestionScolaireController::class)->group(function () {
     Route::post('/auto-create-next-section', 'autoCreateNextSection');
     Route::get('/generate-report', 'generateReport');
 });
-Route::get('/filieres', [GestionScolaireController::class, 'indexF']);       // عرض كل الشعب
+Route::get('/filieres', [GestionScolaireController::class, 'indexF']); 
+Route::get('/api/students', [GestionScolaireController::class, 'getStudents']);       // عرض كل الشعب
 Route::put('/filieres/{id}', [GestionScolaireController::class, 'updateF']); // تعديل شعبة
 Route::delete('/filieres/{id}', [GestionScolaireController::class, 'destroyF']); // حذف شعبة
 

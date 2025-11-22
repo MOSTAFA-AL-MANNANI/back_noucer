@@ -15,6 +15,19 @@ use Carbon\Carbon;
 
 class GestionScolaireController extends Controller
 {
+public function getStudents()
+{
+    $students = Students::paginate(30);
+    return response()->json([
+        'data' => $students->items(), // Les étudiants de la page actuelle
+        'current_page' => $students->currentPage(),
+        'last_page' => $students->lastPage(),
+        'per_page' => $students->perPage(),
+        'total' => $students->total(),
+        'from' => $students->firstItem(),
+        'to' => $students->lastItem(),
+    ], 200);
+}
         public function indexF()
     {
         $filieres = Filiere::all();
