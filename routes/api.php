@@ -28,7 +28,7 @@ Route::delete('/techniques/{id}', [Entretien::class, 'supprimerTech']);
 
 // ================= Students =================
 Route::get('/students', [Entretien::class, 'getStudents']);
-Route::post('/students', [Entretien::class, 'ajouterStu']);
+
 Route::put('/students/{id}', [Entretien::class, 'modifierStu']);
 Route::delete('/students/{id}', [Entretien::class, 'supprimerStu']);
 
@@ -56,7 +56,7 @@ Route::controller(GestionScolaireController::class)->group(function () {
     Route::post('/auto-create-next-section', 'autoCreateNextSection');
     Route::get('/generate-report', 'generateReport');
 });
-Route::get('/filieres', [GestionScolaireController::class, 'indexF']); 
+
 Route::get('/api/students', [GestionScolaireController::class, 'getStudents']);       // عرض كل الشعب
 Route::put('/filieres/{id}', [GestionScolaireController::class, 'updateF']); // تعديل شعبة
 Route::delete('/filieres/{id}', [GestionScolaireController::class, 'destroyF']); // حذف شعبة
@@ -105,7 +105,8 @@ Route::get('/top-students/{filiere}', [Entretien::class, 'topStudentsByFiliere']
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-
+Route::get('/filieres', [GestionScolaireController::class, 'indexF']); 
+Route::post('/students', [Entretien::class, 'ajouterStu']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

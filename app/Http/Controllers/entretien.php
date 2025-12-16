@@ -188,7 +188,7 @@ public function topStudentsByFiliere($filiere)
     // Récupérer les 30 meilleurs étudiants de la filière
     $students = \App\Models\Students::with('resultat')
         ->where('filiere', $filiere)
-        ->where('status', 'in_interview')
+        ->where('status', 'passed')
         ->join('resultat', 'students.id_stu', '=', 'resultat.id_stu')
         ->orderByDesc('resultat.total')
         ->select('students.*', 'resultat.scoreP', 'resultat.scoreT', 'resultat.scoreS', 'resultat.total')
